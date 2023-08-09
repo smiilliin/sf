@@ -1,46 +1,114 @@
-# Getting Started with Create React App
+# SF - simple format
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Create simple screens with simple text format.
 
-## Available Scripts
+## Run
 
-In the project directory, you can run:
+```bash
+npm run start
+```
 
-### `npm start`
+## Usage
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+A command consists of tags, data and some options.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+```
+[tag] [data] [option key1]=[option data1], [option key2]=[option data2] (...);
 
-### `npm test`
+link "https://google.com" href="https://google.com";
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+If you wanna use normal text, you can use it without its tag.
 
-### `npm run build`
+```
+[data] [options];
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+"normal text";
+"normal text2" mtop="10px";
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+You can write data in multiple lines.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+"asdf
+ffff
+hi";
 
-### `npm run eject`
+"
+hello
+every
+body
+";
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+You can also write in tag, data, options multiple lines.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
+text "asdf"
+mleft=10, color="gray";
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+**If you use a new line after tag, you must use "\\"**
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```
+text \
+"asdf" mleft=10;
+```
 
-## Learn More
+# Tags
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+| Name    | Data             | Options                 | When to use                |
+| ------- | ---------------- | ----------------------- | -------------------------- |
+| text    | text data        | -                       | multiple lines text        |
+| -       | (same text tag)  | -                       | -                          |
+| p       | text data        | -                       | a line text with margin    |
+| span    | text data        | -                       | inline text                |
+| big     | text data        | -                       | h1                         |
+| middle  | text data        | -                       | h2                         |
+| small   | text data        | -                       | h3                         |
+| img     | image src        | alt                     | to show image              |
+| a       | text data        | href, underline, newtab | link                       |
+| link    | (same a tag)     | -                       | -                          |
+| divider | border top       | -                       | to divide contents         |
+| bg      | background color | -                       | to change background color |
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+# Style
+
+| Name     | Usage          |
+| -------- | -------------- |
+| mtop     | margin-top     |
+| mbottom  | margin-bottom  |
+| mleft    | margin-left    |
+| mright   | margin-right   |
+| ptop     | padding-top    |
+| pbottom  | padding-bottom |
+| pleft    | padding-left   |
+| pright   | padding-right  |
+| border   | border         |
+| bradius  | border-radius  |
+| color    | color          |
+| cursor   | cursor         |
+| blend    | mix-blend-mode |
+| width    | width          |
+| height   | height         |
+| mwidth   | max-width      |
+| mheight  | max-height     |
+| display  | display        |
+| position | position       |
+| float    | float          |
+
+## Example
+
+```
+bg "#181a1b";
+img "./react.png" alt="icon", float="left", height="150px", mright="10px";
+big "SF" color="white", blend="difference";
+middle "simple format" color="white", blend="difference";
+a "by smiilliin" href="https://github.com/smiilliin", underline=false, newtab=true, color="gray", blend="difference";
+divider "1px solid white" mtop=10;
+"Quaestio VIII.
+Propositum quadratum dividere in duos quadratos.
+Imperatum sit ut 16. dividatur in duos quadratos. Ponatur primus 1Q. Oportet igitur 16. - 1Q. aequales esse quadrato. Fingo quadratum a numeris quotquot libuerit, cum defectu tot unitatum quod continet latus ipsius 16. esto a 2N. - 4. ipse igitur quadratus erit 4Q. + 16. - 16N. haec aequabuntur unitatibus 16. - 1Q. Communis adiiciatur utrimque defectus, et a similibus auferantur similia, fient 5Q. aequales 16N. et fit 1N. 16/5. Erit igitur alter quadratorum 256/25. alter vero 144/25. et utriusque summa est 400/25. seu 16. et uterque quadratus est." color="white", mtop="10px", blend="difference";
+```
+
+![example.png](./README/example.png)
