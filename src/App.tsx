@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Sf from "./sf";
 
 function App() {
@@ -16,9 +16,9 @@ function App() {
 
     const rgbBackgroundColor = backgroundColor.match(/\d+/g);
     if (!rgbBackgroundColor) return;
-    let r = Number(rgbBackgroundColor[0]);
-    let g = Number(rgbBackgroundColor[1]);
-    let b = Number(rgbBackgroundColor[2]);
+    const r = Number(rgbBackgroundColor[0]);
+    const g = Number(rgbBackgroundColor[1]);
+    const b = Number(rgbBackgroundColor[2]);
 
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 
