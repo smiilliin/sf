@@ -59,7 +59,7 @@ text \
 
 | Name    | Data             | Options                 | When to use                |
 | ------- | ---------------- | ----------------------- | -------------------------- |
-| text    | text data        | -                       | multiple lines text        |
+| text    | format data      | -                       | format text                |
 | -       | (same text tag)  | -                       | -                          |
 | p       | text data        | -                       | a line text with margin    |
 | span    | text data        | -                       | inline text                |
@@ -112,3 +112,11 @@ Imperatum sit ut 16. dividatur in duos quadratos. Ponatur primus 1Q. Oportet igi
 ```
 
 ![example.png](./README/example.png)
+
+```
+"Hello world!
+Example: \I(\"hello world\")\I" mleft=10, mtop=10;
+"\BHello\B I'm \U\Ismiilliin\I\U btw" mleft=10;
+```
+
+![example2.png](./README/example2.png)
