@@ -485,7 +485,7 @@ const Sf = ({ src, setBackgroundColor, style }: IESf) => {
   const commandPattern = /(?:[^\n]|\\\n)*?"(?:[^"\\]|\\.|;)*"[^;]*;/g;
   const optionPattern = /([^,\s=]*)=([^,]*)/g;
   const commandParsePattern =
-    /^([^\s]*?)[\s\n\\]*"((?:[^"\\]|\\.)*)"(?:[\s\n\\]*(.*))?;/;
+    /^(\s*?[^\s]*?)[\s\n\\]*"((?:[^"\\]|\\.)*)"(?:[\s\n\\]*(.*))?;/;
   const valueParsePattern = /"((?:[^"\\]|\\.)*)"/;
 
   const commands = new Array<ICommand>();
@@ -496,7 +496,7 @@ const Sf = ({ src, setBackgroundColor, style }: IESf) => {
     command = command[0];
 
     const [, _tag, _data, optionsRaw] = commandParsePattern.exec(command) || [];
-    const tag = _tag || "format";
+    const tag = (_tag || "format").trimStart();
     if (tag === "bg") backgroundColor = _data;
 
     const data = _data?.replaceAll("\\n", "\n")?.replaceAll('\\"', '"');
