@@ -71,6 +71,8 @@ text \
 | link    | (same a tag)     | -                       | -                          |
 | divider | border top       | -                       | to divide contents         |
 | bg      | background color | -                       | to change background color |
+| cstart  | squence name     | -                       | open container             |
+| cend    | squence name     | -                       | close container            |
 
 # Style
 
