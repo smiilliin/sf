@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useEffect } from "react";
 
 type ValueType = string | number | boolean;
@@ -16,9 +16,12 @@ const getKeyFromCommand = (commandIndex: number, command: ICommand) => {
     key[option[0]] = option[1];
   }
 
-  return (
-    String(commandIndex) + command.tag + command.data + JSON.stringify(key)
-  );
+  return [
+    commandIndex.toString(),
+    command.tag,
+    command.data,
+    JSON.stringify(key),
+  ].join(";");
 };
 
 enum KeysType {
@@ -304,6 +307,10 @@ const TextFormatContainer = ({
         italicData = updateData(italicData, "I");
       }
     }
+
+    if (textFormatComponents.length > 100) {
+      throw new Error("too many textFormatComponents");
+    }
   }
 
   return <>{textFormatComponents}</>;
@@ -477,70 +484,179 @@ const Command = ({ command }: IECommand) => {
 };
 
 interface IESf {
-  src: string;
+  src?: string;
   setBackgroundColor?: React.Dispatch<React.SetStateAction<string>>;
   style?: React.CSSProperties;
+  commands?: Array<ICommand>;
 }
-const Sf = ({ src, setBackgroundColor, style }: IESf) => {
+const Sf = ({ src, setBackgroundColor, style, commands }: IESf) => {
   const commandPattern = /(?:[^\n]|\\\n)*?"(?:[^"\\]|\\.|;)*"[^;]*;/g;
   const optionPattern = /([^,\s=]*)=([^,]*)/g;
   const commandParsePattern =
     /^(\s*?[^\s]*?)[\s\n\\]*"((?:[^"\\]|\\.)*)"(?:[\s\n\\]*(.*))?;/;
   const valueParsePattern = /"((?:[^"\\]|\\.)*)"/;
 
-  const commands = new Array<ICommand>();
+  enum SfElementTypeEnum {
+    command,
+    container,
+    containerCommand,
+  }
+  interface SfElement {
+    type: SfElementTypeEnum;
+    data: ICommand | Array<ICommand>;
+  }
 
-  let backgroundColor: string | undefined;
-  let command;
-  while ((command = commandPattern.exec(src))) {
-    command = command[0];
+  const getKeyFromSfElement = (index: number, element: SfElement): string => {
+    if (element.type == SfElementTypeEnum.command) {
+      return index + (element.data as ICommand).data;
+    } else {
+      return (element.data as Array<ICommand>)
+        .map((command, index) => getKeyFromCommand(index, command))
+        .join(";");
+    }
+  };
 
-    const [, _tag, _data, optionsRaw] = commandParsePattern.exec(command) || [];
-    const tag = (_tag || "format").trimStart();
-    if (tag === "bg") backgroundColor = _data;
+  const [elements, setElements] = useState<Array<SfElement>>([]);
 
-    const data = _data?.replaceAll("\\n", "\n")?.replaceAll('\\"', '"');
+  useEffect(() => {
+    const newElements: Array<SfElement> = [];
 
-    let option;
-    const options = new Map<string, ValueType>();
-    while ((option = optionPattern.exec(optionsRaw))) {
-      const [, key, valueRaw] = option;
-      const valueParseData = valueParsePattern.exec(valueRaw);
+    let containerCommands: Array<ICommand> = [];
+    let containerSquence: string | null = null;
 
-      let value: ValueType;
-      if (valueParseData) {
-        value = valueParseData[1];
+    const processElement = (command: ICommand) => {
+      const { tag, data } = command;
+
+      if (tag == "cstart" && containerSquence == null) {
+        containerSquence = data;
+        newElements.push({
+          type: SfElementTypeEnum.containerCommand,
+          data: command,
+        });
+      } else if (tag == "cend" && command.data == containerSquence) {
+        containerSquence = null;
+        newElements.push({
+          type: SfElementTypeEnum.container,
+          data: containerCommands,
+        });
+        containerCommands = [];
       } else {
-        if (valueRaw === "true" || valueRaw === "t" || valueRaw === "T") {
-          value = true;
-        } else if (
-          valueRaw === "false" ||
-          valueRaw === "f" ||
-          valueRaw === "F"
-        ) {
-          value = false;
+        if (containerSquence != null) {
+          containerCommands.push(command);
         } else {
-          value = Number(valueRaw);
+          newElements.push({
+            type: SfElementTypeEnum.command,
+            data: command,
+          });
         }
       }
-      options.set(key, value);
-    }
+    };
 
-    commands.push({ tag: tag || "", data: data || "", options: options });
-  }
-  useEffect(() => {
-    if (!setBackgroundColor) return;
-    if (backgroundColor) setBackgroundColor(backgroundColor);
-  }, [backgroundColor, setBackgroundColor]);
+    if (!commands) {
+      commands = [];
+
+      if (src == undefined) {
+        throw new Error("src is not defined");
+      }
+      let commandRaw;
+
+      while ((commandRaw = commandPattern.exec(src))) {
+        commandRaw = commandRaw[0];
+
+        const [, _tag, _data, optionsRaw] =
+          commandParsePattern.exec(commandRaw) || [];
+        const tag = (_tag || "format").trimStart();
+        const data = _data?.replaceAll("\\n", "\n")?.replaceAll('\\"', '"');
+
+        if (setBackgroundColor && tag === "bg") {
+          setBackgroundColor(data);
+          continue;
+        }
+
+        let option;
+        const options = new Map<string, ValueType>();
+        while ((option = optionPattern.exec(optionsRaw))) {
+          const [, key, valueRaw] = option;
+          const valueParseData = valueParsePattern.exec(valueRaw);
+
+          let value: ValueType;
+          if (valueParseData) {
+            value = valueParseData[1];
+          } else {
+            if (valueRaw === "true" || valueRaw === "t" || valueRaw === "T") {
+              value = true;
+            } else if (
+              valueRaw === "false" ||
+              valueRaw === "f" ||
+              valueRaw === "F"
+            ) {
+              value = false;
+            } else {
+              value = Number(valueRaw);
+            }
+          }
+          options.set(key, value);
+        }
+
+        const command: ICommand = {
+          tag: tag || "",
+          data: data || "",
+          options: options,
+        };
+        processElement(command);
+
+        if (commands.length > 100) {
+          throw new Error("too many commands");
+        }
+      }
+    } else {
+      commands.forEach((command) => processElement(command));
+    }
+    // commands.forEach((command) => {});
+    setElements([...newElements]);
+  }, [src, commands]);
+
+  const containerStyle = { ...style };
+  delete containerStyle.marginTop;
+  delete containerStyle.marginBottom;
+  delete containerStyle.marginLeft;
+  delete containerStyle.marginRight;
+  delete containerStyle.paddingTop;
+  delete containerStyle.paddingBottom;
+  delete containerStyle.paddingLeft;
+  delete containerStyle.paddingRight;
+  delete containerStyle.border;
+
+  let commandStyle: React.CSSProperties = {};
 
   return (
     <div style={style}>
-      {commands.map((command, index) => (
-        <Command
-          command={command}
-          key={getKeyFromCommand(index, command)}
-        ></Command>
-      ))}
+      {elements.map((element, index) => {
+        if (element.type == SfElementTypeEnum.containerCommand) {
+          commandStyle = bindOptions(
+            baseKeys,
+            (element.data as ICommand).options,
+            commandStyle
+          );
+          return <></>;
+        } else if (element.type == SfElementTypeEnum.container) {
+          return (
+            <Sf
+              setBackgroundColor={setBackgroundColor}
+              style={{ ...containerStyle, ...commandStyle }}
+              commands={element.data as Array<ICommand>}
+              key={getKeyFromSfElement(index, element)}
+            ></Sf>
+          );
+        } else {
+          return (
+            <Command
+              command={element.data as ICommand}
+              key={getKeyFromCommand(index, element.data as ICommand)}
+            ></Command>
+          );
+        }
+      })}
     </div>
   );
 };
