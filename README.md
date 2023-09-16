@@ -2,6 +2,15 @@
 
 Create simple screens with simple text format.
 
+## Install
+
+Install modules
+
+```bash
+npm install prismjs
+npm install -D @types/prismjs
+```
+
 ## Run
 
 ```bash
@@ -76,28 +85,33 @@ text \
 
 # Style
 
-| Name     | Usage          |
-| -------- | -------------- |
-| mtop     | margin-top     |
-| mbottom  | margin-bottom  |
-| mleft    | margin-left    |
-| mright   | margin-right   |
-| ptop     | padding-top    |
-| pbottom  | padding-bottom |
-| pleft    | padding-left   |
-| pright   | padding-right  |
-| border   | border         |
-| bradius  | border-radius  |
-| color    | color          |
-| cursor   | cursor         |
-| blend    | mix-blend-mode |
-| width    | width          |
-| height   | height         |
-| mwidth   | max-width      |
-| mheight  | max-height     |
-| display  | display        |
-| position | position       |
-| float    | float          |
+| Name      | Usage          |
+| --------- | -------------- |
+| mtop      | margin-top     |
+| mbottom   | margin-bottom  |
+| mleft     | margin-left    |
+| mright    | margin-right   |
+| ptop      | padding-top    |
+| pbottom   | padding-bottom |
+| pleft     | padding-left   |
+| pright    | padding-right  |
+| border    | border         |
+| bradius   | border-radius  |
+| color     | color          |
+| cursor    | cursor         |
+| blend     | mix-blend-mode |
+| width     | width          |
+| height    | height         |
+| mwidth    | max-width      |
+| mheight   | max-height     |
+| display   | display        |
+| position  | position       |
+| float     | float          |
+| wordwrap  | word-wrap      |
+| wordbreak | word-break     |
+| size      | font-size      |
+| weight    | font-weight    |
+| family    | font-family    |
 
 ## Example
 
@@ -122,3 +136,25 @@ Example: \I(\"hello world\")\I" mleft=10, mtop=10;
 ```
 
 ![example2.png](./README/example2.png)
+
+```
+small "hello world code in c";
+
+code "#include <stdio.h>
+
+int main() {
+	printf(\"hello world!\\n\");
+	return 0;
+}" lang="cpp";
+
+small "hello world code in c++";
+
+code "#include <iostream>
+
+int main() {
+	std::cout << \"hello world!\" << std::endl;
+	return 0;
+}" lang="cpp";
+```
+
+![example3.png](./README/example3.png)
