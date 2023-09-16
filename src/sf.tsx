@@ -1,5 +1,25 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
+import Prism from "prismjs";
+
+import "prismjs/components/prism-javascript";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-css";
+import "prismjs/components/prism-c";
+import "prismjs/components/prism-cpp";
+import "prismjs/components/prism-go";
+import "prismjs/components/prism-go-module";
+import "prismjs/components/prism-csharp";
+import "prismjs/components/prism-http";
+import "prismjs/components/prism-java";
+import "prismjs/components/prism-objectivec";
+import "prismjs/components/prism-markup-templating";
+import "prismjs/components/prism-php";
+import "prismjs/components/prism-python";
+import "prismjs/components/prism-jsx";
+import "prismjs/components/prism-tsx";
+import "prismjs/components/prism-sql";
+import "prismjs/themes/prism-tomorrow.css";
 
 type ValueType = string | number | boolean;
 interface ICommand {
@@ -15,11 +35,12 @@ const getKeyFromCommand = (commandIndex: number, command: ICommand) => {
     const option = optionsEntries[i];
     key[option[0]] = option[1];
   }
+  const encoder = new TextEncoder();
 
   return [
     commandIndex.toString(),
     command.tag,
-    command.data,
+    crypto.subtle.digest("SHA-1", encoder.encode(command.data)),
     JSON.stringify(key),
   ].join(";");
 };
@@ -56,6 +77,11 @@ const baseKeys: BindKeys = {
   display: ["display", KeysType.StringType],
   position: ["position", KeysType.StringType],
   float: ["float", KeysType.StringType],
+  wordwrap: ["wordWrap", KeysType.StringType],
+  wordbreak: ["wordBreak", KeysType.StringType],
+  size: ["fontSize", KeysType.NS],
+  weight: ["fontWeight", KeysType.NS],
+  family: ["fontFamily", KeysType.StringType],
 };
 
 const bindOptions = (
@@ -338,7 +364,7 @@ const TextFormatRenderer = ({
   }
   formatStyle.whiteSpace = "pre-wrap";
 
-  return <span style={formatStyle}>{data.replaceAll("\\\\", "\\")}</span>;
+  return <span style={formatStyle}>{data}</span>;
 };
 interface IETextFormat {
   data: string;
@@ -477,6 +503,30 @@ const Command = ({ command }: IECommand) => {
       commandStyle = bindOptions(baseKeys, options, commandStyle);
       return <div style={commandStyle}></div>;
     }
+    case "code": {
+      commandStyle = bindOptions(baseKeys, options, commandStyle);
+      commandStyle = {
+        margin: 0,
+        ...commandStyle,
+      };
+      const lang = options.get("lang");
+
+      return (
+        <pre style={commandStyle}>
+          <code
+            className={`language-${lang}`}
+            style={{
+              maxWidth: "100%",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              wordWrap: "break-word",
+            }}
+          >
+            {data}
+          </code>
+        </pre>
+      );
+    }
     default: {
       return <></>;
     }
@@ -566,7 +616,31 @@ const Sf = ({ src, setBackgroundColor, style, commands }: IESf) => {
         const [, _tag, _data, optionsRaw] =
           commandParsePattern.exec(commandRaw) || [];
         const tag = (_tag || "format").trimStart();
-        const data = _data?.replaceAll("\\n", "\n")?.replaceAll('\\"', '"');
+        const replaceNewline = (data: string) => {
+          let newData = "";
+
+          const pattern = new RegExp(`(^|[^\\\\])(?:\\\\\\\\)*(?:\\\\n)`, "g");
+          let patternResult: RegExpExecArray | null = null;
+          let lastEnd = 0;
+          while ((patternResult = pattern.exec(data))) {
+            if (patternResult[1] !== "") {
+              patternResult.index++;
+              patternResult.length--;
+            }
+
+            const nowEnd = patternResult.index + patternResult.length;
+            newData += data.slice(lastEnd, nowEnd - 1) + "\n";
+
+            lastEnd = nowEnd;
+          }
+          newData += data.slice(lastEnd);
+          return newData;
+        };
+
+        const data = replaceNewline(_data?.replaceAll('\\"', '"')).replaceAll(
+          "\\\\",
+          "\\"
+        );
 
         if (setBackgroundColor && tag === "bg") {
           setBackgroundColor(data);
@@ -612,7 +686,6 @@ const Sf = ({ src, setBackgroundColor, style, commands }: IESf) => {
     } else {
       commands.forEach((command) => processElement(command));
     }
-    // commands.forEach((command) => {});
     setElements([...newElements]);
   }, [src, commands]);
 
@@ -629,6 +702,18 @@ const Sf = ({ src, setBackgroundColor, style, commands }: IESf) => {
 
   let commandStyle: React.CSSProperties = {};
 
+  useEffect(() => {
+    if (
+      elements.find(
+        (element) =>
+          element.type == SfElementTypeEnum.command &&
+          (element.data as ICommand).tag == "code"
+      )
+    ) {
+      Prism.highlightAll();
+    }
+  }, [elements]);
+
   return (
     <div style={style}>
       {elements.map((element, index) => {
@@ -638,7 +723,7 @@ const Sf = ({ src, setBackgroundColor, style, commands }: IESf) => {
             (element.data as ICommand).options,
             commandStyle
           );
-          return <></>;
+          return <React.Fragment key={index}></React.Fragment>;
         } else if (element.type == SfElementTypeEnum.container) {
           return (
             <Sf
